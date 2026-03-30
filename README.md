@@ -2,7 +2,7 @@
 
 This was my final project for **CSC 221** at **The City College of New York (CCNY)**. It is a web application that uses Artificial Intelligence to generate cooking recipes and matching food images.
 
-## 🚀 Features
+## Features
 - **Smart Recipe Generation:** Uses **Google Vertex AI (Gemini)** to create detailed, structured JSON recipes.
 - **AI Imagery:** Uses **Imagen 3.0** to generate high-quality, professional food photos for every dish.
 - **FastAPI Backend:** A high-performance Python API managing the logic and AI calls.
