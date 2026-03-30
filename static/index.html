@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Recipe Generator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: auto;
+            padding: 20px;
+            background-color: #F0E68C; /* kaki background */
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2C3E50;
+        }
+
+        form {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px #ccc;
+            margin-bottom: 30px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input {
+            padding: 10px;
+            width: 100%;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #2ecc71;
+        }
+
+        #recipeContainer {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px #ccc;
+        }
+
+        #recipeContainer img {
+            display: block;
+            margin: 10px auto;
+            border-radius: 10px;
+            max-width: 60%; /* smaller image */
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .section h3 {
+            color: #34495e;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+
+        ul, ol {
+            margin-left: 20px;
+        }
+
+        li {
+            margin-bottom: 5px;
+        }
+
+        /* Loading indicator */
+        #loading {
+            display: none;
+            text-align: center;
+            font-weight: bold;
+            color: #e67e22;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Diego's Recipe Generator</h1>
+
+<form id="recipeForm">
+    <label for="dish">Dish name:</label><br>
+    <input type="text" id="dish" name="dish" placeholder="e.g. Spaghetti" required><br><br>
+
+    <label for="maxTime">Max time (minutes):</label><br>
+    <input type="number" id="maxTime" name="maxTime" placeholder="e.g. 60"><br><br>
+
+    <button type="submit">Suggest</button>
+</form>
+
+<div id="loading">Generating recipe, please wait...</div>
+
+<div id="recipeContainer">
+    <h2 id="recipeName"></h2>
+    <p>Prep Time: <span id="prepTime"></span> | Cook Time: <span id="cookTime"></span></p>
+    <img id="recipeImage" src="" alt="Dish image">
+
+    <div class="section">
+        <h3>Ingredients</h3>
+        <ul id="ingredientsList"></ul>
+    </div>
+
+    <div class="section">
+        <h3>Instructions</h3>
+        <ol id="instructionsList"></ol>
+    </div>
+</div>
+
+<script>
+const PLACEHOLDER_IMAGE = "https://via.placeholder.com/400x300?text=Image+Coming+Soon";
+
+document.getElementById("recipeForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    document.getElementById("loading").style.display = "block";
+
+    const dish = document.getElementById("dish").value;
+    const maxTime = document.getElementById("maxTime").value || 60;
+
+    try {
+        const response = await fetch("/recipe", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ description: dish, max_time: maxTime })
+        });
+
+        const recipe = await response.json();
+
+        // Hide loading
+        document.getElementById("loading").style.display = "none";
+
+        // Recipe details
+        document.getElementById("recipeName").textContent = recipe.name;
+        document.getElementById("prepTime").textContent = recipe.prep_time;
+        document.getElementById("cookTime").textContent = recipe.cook_time;
+
+        // Ingredients
+        const ingredientsUl = document.getElementById("ingredientsList");
+        ingredientsUl.innerHTML = "";
+        recipe.ingredients.forEach(section => {
+            for (let key in section) {
+                let sectionHeader = document.createElement("li");
+                sectionHeader.innerHTML = `<strong>${key}:</strong>`;
+                ingredientsUl.appendChild(sectionHeader);
+
+                section[key].forEach(ingredient => {
+                    let li = document.createElement("li");
+                    li.textContent = ingredient;
+                    li.style.marginLeft = "20px";
+                    ingredientsUl.appendChild(li);
+                });
+            }
+        });
+
+        // Instructions
+        const instructionsOl = document.getElementById("instructionsList");
+        instructionsOl.innerHTML = "";
+        recipe.instructions.forEach(section => {
+            for (let key in section) {
+                let sectionHeader = document.createElement("li");
+                sectionHeader.innerHTML = `<strong>${key}:</strong>`;
+                instructionsOl.appendChild(sectionHeader);
+
+                section[key].forEach(step => {
+                    let li = document.createElement("li");
+                    li.textContent = step;
+                    li.style.marginLeft = "20px";
+                    instructionsOl.appendChild(li);
+                });
+            }
+        });
+
+        // Image
+        const imgEl = document.getElementById("recipeImage");
+        imgEl.src = recipe.image ? "data:image/png;base64," + recipe.image : PLACEHOLDER_IMAGE;
+
+    } catch (err) {
+        console.error("Error fetching recipe:", err);
+        document.getElementById("loading").textContent = "Error generating recipe. Please try again.";
+    }
+});
+</script>
+
+</body>
+</html>
